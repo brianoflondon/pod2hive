@@ -30,4 +30,8 @@ The code that writes to the blockchain is:
 
 https://github.com/brianoflondon/pod2hive/blob/main/hiveforpod.py
 
+This code relys on me having entered private posting keys for the "learn-to-code" hive account into something called "beempy" which is a command line interface to store keys on my machine. Only with that on my machine can I post to the blockchain but that is all I require.
+
+You don't need keys or an account to read public data from the chain. I belive there is a simple curl way of accessing this data but I need to do some work on that becuase of the encoding.
+
 Loads of work needed but I'm on my way.
