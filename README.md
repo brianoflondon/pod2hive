@@ -1,3 +1,33 @@
 # pod2hive
 
 It'll be great one day.
+
+Proof of concept... done.
+
+First step: I want to turn Hive into the most amazing place to backup a podcast. 
+
+This is my hacky minimal code to pull an RSS feed from a Hive User's account.
+
+So far the only account with data in it is called learn-to-code
+
+https://github.com/brianoflondon/pod2hive/blob/main/rssfromhive.py
+
+The only thing you'll need is
+
+pip install beem
+
+If you want to see the raw data on the blockchain you can look at it here. You'll see it on the left with "Posting json metadata"
+
+https://hiveblocks.com/@learn-to-code
+
+If you're eyes are working, you'll find the PodcastIndex data for my podcast is then followed by a compressed and character encoded (but not cryptographically encoded) block of data that is the RSS feed.
+
+This is the exact transaction on the blockchain which I put in:
+
+https://hiveblocks.com/tx/e83916d2be6e4d87dddab83ca90b8ae17422fb40
+
+The code that writes to the blockchain is:
+
+https://github.com/brianoflondon/pod2hive/blob/main/hiveforpod.py
+
+Loads of work needed but I'm on my way.
