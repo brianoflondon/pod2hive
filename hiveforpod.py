@@ -47,6 +47,16 @@ def getPostingJsonMeta(auth):
     return json.loads(acc['posting_json_metadata'])
 
 
+def getRSSFromHive(auth):
+    """ Gets the RSS from a Hive account if it is in metadata """
+    acc = Account(auth,blockchain_instance=h)
+    mData = json.loads(acc['posting_json_metadata'])
+    print(mData)
+    rssComp = mData['podcastindex']['pod-rss']
+    rss = txtDecomp(rssComp)
+    return rss, rssComp
+
+
 def writePostingJsonMeta(data, auth, wipe=False):
     """ Takes in data and writes it to the Author posting_json_metadata
         Adds it to exsiting meta data unless wipe is True in which case
@@ -56,13 +66,24 @@ def writePostingJsonMeta(data, auth, wipe=False):
     acc = Account(auth,blockchain_instance=h)
     tx = acc.update_account_jsonmetadata(newMeta, account=auth)
     saveTXRecord(tx)
+    return tx
     
 
 def saveTXRecord(tx):
     """ Saves a TX record """
     with open(txRecord, 'a') as f:
-        json.dump(f,tx)
+        json.dump(tx,f,indent=2)
         
+
+def getPIinfoAndRss(url):
+    """ Gets both the podcast index info and RSS feed for a URL
+        Returns the dict and the raw rss text """
+    r = pind.doCall('byfeed',url)
+    rssComp, rss = getRssFromWeb(url)
+    piInfo = {}
+    piInfo['podcastindex'] = r.json()
+    piInfo['podcastindex']['pod-rss'] = rssComp
+    return piInfo, rss
 
 
 if __name__ == "__main__":
@@ -73,14 +94,20 @@ if __name__ == "__main__":
 
     auth = 'learn-to-code'
 
-    hiveJson = getPostingJsonMeta(auth)
-    r = pind.doCall('byfeed',feedURL)
-    rssComp, rss = getRssFromWeb(feedURL)
+    piInfo, rss = getPIinfoAndRss(feedURL)
+    print(json.dumps(piInfo,indent=2))
+    # tx = writePostingJsonMeta(piInfo,auth)
+    # print(json.dumps(tx,indent=2))
     
-    feedInfoJson = r.json()
+    rssBack, rssBackComp = getRSSFromHive(auth)
     
-    with open('ltc-profile.json', 'r') as f:
-        profiled = json.load(f)
+    if rssBack == rss:
+        print(rssBack)
+        print('We did it! The Same.')
+    
+    
+    # with open('ltc-profile.json', 'r') as f:
+    #     profiled = json.load(f)
 
     # writePostingJsonMeta(profiled,auth)
     
