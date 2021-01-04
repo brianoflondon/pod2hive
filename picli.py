@@ -9,6 +9,10 @@ import requests
 import time
 import os
 
+# create and parse our args
+parser = argparse.ArgumentParser()
+parser.add_argument(dest='search_query', type=str, help="Query to search podcastindex.org for")
+args = parser.parse_args()
 
 # setup some basic vars for the search api. 
 # for more information, see https://api.podcastindex.org/developer_docs
@@ -65,4 +69,34 @@ def doRecent(max = 40, since = '', lang = '', cat = '', nocat = ''):
 
 
 if __name__ == "__main__":
-    pass
+    
+    query = args.search_query
+  
+    # perform the actual post request
+    r = doCall('byterm',query)
+    # r = doRecent(max=10)
+    
+    # if it's successful, dump the contents (in a prettified json-format)
+    # else, dump the error code we received
+    if r.status_code == 200:
+        print ('<< Received >>')
+        pretty_json = json.loads(r.text)
+        countfeeds = pretty_json['count']
+        print(f'Number of feeds: {countfeeds}')
+        print (json.dumps(pretty_json, indent=2))
+    else:
+        print ('<< Received ' + str(r.status_code) + '>>')
+
+    for fdd in pretty_json['feeds']:
+        ftit = fdd['title']
+        fid = fdd['id']
+        furl = fdd['url']
+        # print(f'{fid} - {ftit} - {furl}')
+        # print('fetching URL for size')
+        try:
+            r = requests.get(furl)
+            cRSS = r.text
+            lsize = len(cRSS) / 1024
+            print(f'Str Len: {lsize:.0f} kb - {fid} - {ftit} - {furl}')
+        except:
+            pass
