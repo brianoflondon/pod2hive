@@ -14,7 +14,7 @@ https://github.com/brianoflondon/pod2hive/blob/main/rssfromhive.py
 
 The only thing you'll need is
 
-pip install beem
+```pip install beem```
 
 If you want to see the raw data on the blockchain you can look at it here. You'll see it on the left with "Posting json metadata"
 
