@@ -21,7 +21,10 @@ import config
 
 baseURL = 'https://api.podcastindex.org/'
 apiCalls = {
-    'byterm' : '/api/1.0/search/byterm?q='
+    'byterm' : '/api/1.0/search/byterm?q=',
+    'byfeed' : '/api/1.0/podcasts/byfeedurl?url=',
+    'byfeedid' : '/api/1.0/podcasts/byfeedid?id=' ,
+    'recentfeeds' : '/api/1.0/recent/feeds'
 }
 
 def getHeaders():
@@ -64,12 +67,9 @@ def doCall(call, query):
         return False
     
     
-def doSearch(query):
-    """ run a vanilla search returns a request """
-    url = "https://api.podcastindex.org/api/1.0/search/byterm?q=" + query
-    # perform the actual post request
-    r = requests.post(url, headers=getHeaders())
-    return r
+def doRecent(max = 40, since = '', lang = '', cat = '', nocat = ''):
+    query = f'?max={max}&cat={cat}&lang={lang}'
+    return doCall('recentfeeds',query)
 
 
 if __name__ == "__main__":
@@ -77,7 +77,8 @@ if __name__ == "__main__":
     query = args.search_query
   
     # perform the actual post request
-    r = doCall('byterm',query)
+    # r = doCall('byterm',query)
+    r = doRecent(max=10)
     
     # if it's successful, dump the contents (in a prettified json-format)
     # else, dump the error code we received
@@ -94,10 +95,12 @@ if __name__ == "__main__":
         ftit = fdd['title']
         fid = fdd['id']
         furl = fdd['url']
-        print(f'{fid} - {ftit} - {furl}')
-        print('fetching URL for size')
-        r = requests.get(furl)
-        cRSS = r.text
-        lsize = len(cRSS) / 1024
-        print(f'Str Len: {lsize:.0f} kb')
-    
+        # print(f'{fid} - {ftit} - {furl}')
+        # print('fetching URL for size')
+        try:
+            r = requests.get(furl)
+            cRSS = r.text
+            lsize = len(cRSS) / 1024
+            print(f'Str Len: {lsize:.0f} kb - {fid} - {ftit} - {furl}')
+        except:
+            pass
