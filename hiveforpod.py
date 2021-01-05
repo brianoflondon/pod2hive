@@ -48,14 +48,26 @@ def getPostingJsonMeta(auth):
 
 
 def getRSSFromHive(auth):
-    """ Gets the RSS from a Hive account if it is in metadata """
+    """ Gets the RSS from a Hive account if it is in metadata 
+        Returns 4 values, rss compressed rsss  """
     acc = Account(auth,blockchain_instance=h)
     mData = json.loads(acc['posting_json_metadata'])
-    print(mData)
-    rssComp = mData['podcastindex']['pod-rss']
-    rss = txtDecomp(rssComp)
-    return rss, rssComp
+    hasData = {}
+    hasData['podcastindex'] = False
+    hasData['pod-rss'] = False
+    hasData['pod-rss-text'] = False
+    mData['pod-rss-text'] = False
+    
+    if 'pod-rss' in mData:
+        mData['pod-rss-text'] = txtDecomp(mData['pod-rss'])
+        hasData['pod-rss'] = True
+        hasData['pod-rss-text'] = True
 
+    if 'podcastindex' in mData:
+        hasData['podcastindex'] = True
+
+    return mData,hasData
+    
 
 def writePostingJsonMeta(data, auth, wipe=False):
     """ Takes in data and writes it to the Author posting_json_metadata
@@ -82,9 +94,17 @@ def getPIinfoAndRss(url):
     rssComp, rss = getRssFromWeb(url)
     piInfo = {}
     piInfo['podcastindex'] = r.json()
-    piInfo['podcastindex']['pod-rss'] = rssComp
+    piInfo['pod-rss'] = rssComp
     return piInfo, rss
 
+
+def getHiveNodes():
+    """ Return a list of hive node URLS """
+    from beem.nodelist import NodeList
+    nodelist = NodeList()
+    nodelist.update_nodes()
+    nodes = nodelist.get_hive_nodes()
+    return nodes
 
 if __name__ == "__main__":
     feedURLs = ['https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
@@ -93,17 +113,30 @@ if __name__ == "__main__":
     feedURL = feedURLs[0]
 
     auth = 'learn-to-code'
+    auth = 'brianoflondon'
+    
+    nodes = getHiveNodes()
 
     piInfo, rss = getPIinfoAndRss(feedURL)
-    print(json.dumps(piInfo,indent=2))
-    # tx = writePostingJsonMeta(piInfo,auth)
-    # print(json.dumps(tx,indent=2))
     
-    rssBack, rssBackComp = getRSSFromHive(auth)
+    mData,hasData = getRSSFromHive(auth)
     
-    if rssBack == rss:
-        print(rssBack)
-        print('We did it! The Same.')
+    if hasData['pod-rss-text']:
+        if mData['pod-rss-text'] == rss:
+            # print(rssBack)
+            print('podcast rss feed unchanged - We did it! The Same.')
+    
+    if hasData['podcastindex']:
+        if mData['podcastindex'] == piInfo['podcastindex']:
+            print('We did it! The Same.')
+    
+    mDataUpdate = False
+    if mDataUpdate:
+        tx = writePostingJsonMeta(piInfo,auth)
+
+
+    
+    # curl -s --data '{"jsonrpc":"2.0", "method":"database_api.find_accounts", "params": {"accounts":["learn-to-code"]}, "id":1}' https://api.hive.blog
     
     
     # with open('ltc-profile.json', 'r') as f:
@@ -119,3 +152,11 @@ if __name__ == "__main__":
     
     
     print('done')
+
+
+
+hivenodes = ['https://api.deathwing.me', 
+             'https://hived.emre.sh', 
+             'https://hive.roelandp.nl', 
+             'https://rpc.ausbit.dev', 
+             'https://api.hive.blog', 'https://rpc.ecency.com', 'https://api.pharesim.me', 'https://api.openhive.network', 'https://hived.privex.io', 'https://hive-api.arcange.eu', 'https://api.c0ff33a.uk', 'https://api.hivekings.com', 'https://fin.hive.3speak.co', 'https://anyx.io', ...]
