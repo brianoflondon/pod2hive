@@ -106,6 +106,23 @@ def getHiveNodes():
     nodes = nodelist.get_hive_nodes()
     return nodes
 
+def getNodeSpeedTest(auth):
+    """ Perform a speed test on all available nodes """
+    import time
+
+    nodes = getHiveNodes()
+    speed = {}
+    for node in nodes:
+        start = time.perf_counter()
+        h = Hive(node=node)
+        acc = Account(auth,blockchain_instance=h)
+        _ = json.loads(acc['posting_json_metadata'])
+        end = time.perf_counter()
+        elapse = end - start
+        speed[node] = elapse
+        # print(f'Node: {node} - Time: {elapse}')
+    return speed
+
 if __name__ == "__main__":
     feedURLs = ['https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
                 'http://feed.nashownotes.com/rss.xml',
@@ -113,9 +130,12 @@ if __name__ == "__main__":
     feedURL = feedURLs[0]
 
     auth = 'learn-to-code'
-    auth = 'brianoflondon'
+    # auth = 'brianoflondon'
+
+    # speeds = getNodeSpeedTest(auth)
+    # for speed in speeds: 
+    #     print(f'{speed} - {speeds[speed]}')
     
-    nodes = getHiveNodes()
 
     piInfo, rss = getPIinfoAndRss(feedURL)
     
@@ -135,6 +155,7 @@ if __name__ == "__main__":
         tx = writePostingJsonMeta(piInfo,auth)
 
 
+        
     
     # curl -s --data '{"jsonrpc":"2.0", "method":"database_api.find_accounts", "params": {"accounts":["learn-to-code"]}, "id":1}' https://api.hive.blog
     
