@@ -4,13 +4,16 @@
 
 from beem import Hive
 from beem.account import Account
+from beem.comment import Comment
 from beem.utils import construct_authorperm, sanitize_permlink
+from beem.exceptions import ContentDoesNotExistsException
 
 import json
 import requests
 import zlib
 import base64
 import datetime
+import time
 
 import podcastindex as pind
 from mdutils import MdUtils
@@ -126,29 +129,48 @@ def getNodeSpeedTest(auth):
         # print(f'Node: {node} - Time: {elapse}')
     return speed
 
+def checkExists(auth, pLink):
+    """ Test if a pLink value has been posted by this author before 
+        Returns True False """
+    authPLink = construct_authorperm(auth, pLink)
+    try:
+        Comment(authorperm=authPLink)
+    except ContentDoesNotExistsException:
+        return False
+    return True
 
-def postLatestEpisode(auth, url):
-    """ Post an episode to the blochain """
-    episodes = pind.getEpisodes(url,1).json()
-    # print(json.dumps(episodes,indent=2))
+
+def postEpisode(auth, url, id=None):
+    """ Post an episode to the blochain if no id get latest """
     
-    if episodes['status']:
-        for epi in episodes['items']:
-            mf, fileName = pind.episodeToMarkdown(epi)
+    if id is None:
+        episodes = pind.getEpisodes(url,1).json()
+        # print(json.dumps(episodes,indent=2))
+        
+        if episodes['status']:
+            for epi in episodes['items']:
+                id = epi['id']
+    else:
+        episodes = pind.getEpisode(id).json()
+        if episodes['status']:
+            epi = episodes['episode']
+        
+            
+    mf, _ = pind.episodeToMarkdown(epi, auth)
             
     cBody = mf
     cTitle = epi['title']
     pLink = epi['title'] + ' - ' + str(epi['id'])
     pLink = sanitize_permlink(pLink)
+    
+    newContent = not checkExists(auth,pLink)
     tx = h.post(title = cTitle, 
                 body = cBody.file_data_text, 
                 author=auth,
                 tags=['test','podcast'],
                 permlink=pLink) 
     saveTXRecord(tx)
-    return tx
-            
-    pass
+    return tx, newContent
 
     
 
@@ -163,8 +185,23 @@ if __name__ == "__main__":
     auth = 'learn-to-code'
     # auth = 'brianoflondon'
 
-    postLatestEpisode(auth,feedURL)
-
+    epList = []
+    episodes = pind.getEpisodes(feedURL,7).json()
+    if episodes['status']:
+        for epi in episodes['items']:
+            epList.append(epi['id'])
+    epList.sort(reverse=False)
+    print(epList)
+    for epId in epList:
+        tx, newContent = postEpisode(auth,feedURL,epId)
+        if newContent:
+            time.sleep(66*5) # Wait 5 mins
+        else:
+            time.sleep(6)
+    
+    # revep = sorted(episodes['items'],reverse=True)
+    # print(json.dumps(episodes['items'], indent=2))
+    
     # speeds = getNodeSpeedTest(auth)
     # for speed in speeds: 
     #     print(f'{speed} - {speeds[speed]}')
@@ -192,7 +229,6 @@ if __name__ == "__main__":
     if mDataUpdate:
         tx = writePostingJsonMeta(piInfo,auth)
         
-
 
 
         

@@ -24,7 +24,8 @@ apiCalls = {
     'byfeedid' : '/api/1.0/podcasts/byfeedid?id=' ,
     'recentfeeds' : '/api/1.0/recent/feeds',
     'epbyfeedurl' : '/api/1.0/episodes/byfeedurl?url=',
-    'epbyfeedid' : '/api/1.0/episodes/byfeedid?id='
+    'epbyfeedid' : '/api/1.0/episodes/byfeedid?id=',
+    'epbyid' : '/api/1.0/episodes/byid?id='
 }
 
 def getHeaders():
@@ -74,7 +75,14 @@ def getEpisodes(feedURL, max):
     query = f'{feedURL}&max={max}'
     return doCall('epbyfeedurl', query)
 
-def episodeToMarkdown(data):
+def getEpisode(id):
+    """ Get specific episode by episode id """
+    query = f'{id}'
+    return doCall('epbyid',query)
+
+
+
+def episodeToMarkdown(data, auth):
     """ Take in a podcast episode data from PodcastIndex and return Markdowns """
     fileName = str(data['id']) +'.md'
     published = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(data['datePublished']))
@@ -89,7 +97,9 @@ def episodeToMarkdown(data):
     elif 'feedImage':
         mf.new_paragraph(Html.image(path=data['feedImage']))
     mf.new_paragraph(data['description'])
-    mf.create_md_file()
+    mf.read_md_file('postfooter.md')
+    mf.file_data_text = mf.file_data_text.replace('somethingtoreplacehere777',auth)
+    
     return mf, fileName
 
 
@@ -97,9 +107,10 @@ def episodeToMarkdown(data):
 if __name__ == "__main__":
     
     episodes = getEpisodes('http://feed.nashownotes.com/rss.xml',1).json()
-    print(json.dumps(episodes,indent=2))
-    
+    print(json.dumps(episodes,indent=5))
+    auth = 'learn-to-code'
     if episodes['status']:
         for epi in episodes['items']:
-            episodeToMarkdown(epi)
+            mf,_ =episodeToMarkdown(epi, auth)
+            print(mf.file_data_text)
     pass

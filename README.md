@@ -20,6 +20,14 @@ If you want to see the raw data on the blockchain you can look at it here. You'l
 
 https://hiveblocks.com/@learn-to-code
 
+You can get a json version direct from the web:
+
+https://hive.blog/@learn-to-code.json
+
+To Decode this to RSS you can use the code here:
+
+https://github.com/brianoflondon/pod2hive/blob/main/rssfromhive.py
+
 If you're eyes are working, you'll find the PodcastIndex data for my podcast is then followed by a compressed and character encoded (but not cryptographically encoded) block of data that is the RSS feed.
 
 This is the exact transaction on the blockchain which I put in:
