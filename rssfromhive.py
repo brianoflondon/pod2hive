@@ -1,4 +1,7 @@
 # Minimal code needed to pull an RSS feed out of Hive
+# Requirements
+# pip install beem 
+
 
 from beem import Hive
 from beem.account import Account
@@ -17,8 +20,8 @@ def txtDecomp(txt):
 
 # create and parse our args
 parser = argparse.ArgumentParser()
-parser.add_argument('--hive', dest='HiveAccount', type=str,
-                    help="Hive account to fetch RSS from")
+parser.add_argument('--acc', dest='HiveAccount', type=str,
+                    help="Hive Account to fetch RSS from")
 parser.set_defaults(HiveAccount='learn-to-code')
 args = parser.parse_args()
 
@@ -29,10 +32,9 @@ auth = args.HiveAccount
 acc = Account(auth,blockchain_instance=h)
 mData = json.loads(acc['posting_json_metadata'])
 
-if 'podcastindex' in mData:
-    if 'pod-rss' in mData['podcastindex']:
-        rssComp = mData['podcastindex']['pod-rss']
-        rss = txtDecomp(rssComp)
-        print(rss)
+if 'pod-rss' in mData:
+    rssComp = mData['pod-rss']
+    rss = txtDecomp(rssComp)
+    print(rss)
 else:
     print('No Data')
