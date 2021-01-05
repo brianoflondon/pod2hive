@@ -8,6 +8,8 @@ import json
 import requests
 import time
 import os
+from mdutils import Html
+from mdutils import MdUtils
 
 
 # setup some basic vars for the search api. 
@@ -20,7 +22,9 @@ apiCalls = {
     'byterm' : '/api/1.0/search/byterm?q=',
     'byfeed' : '/api/1.0/podcasts/byfeedurl?url=',
     'byfeedid' : '/api/1.0/podcasts/byfeedid?id=' ,
-    'recentfeeds' : '/api/1.0/recent/feeds'
+    'recentfeeds' : '/api/1.0/recent/feeds',
+    'epbyfeedurl' : '/api/1.0/episodes/byfeedurl?url=',
+    'epbyfeedid' : '/api/1.0/episodes/byfeedid?id='
 }
 
 def getHeaders():
@@ -60,9 +64,42 @@ def doCall(call, query):
     
     
 def doRecent(max = 40, since = '', lang = '', cat = '', nocat = ''):
+    """ Get max recent podcasts """
     query = f'?max={max}&cat={cat}&lang={lang}'
     return doCall('recentfeeds',query)
 
 
+def getEpisodes(feedURL, max):
+    """ Get max episodes from a feed """
+    query = f'{feedURL}&max={max}'
+    return doCall('epbyfeedurl', query)
+
+def episodeToMarkdown(data):
+    """ Take in a podcast episode data from PodcastIndex and return Markdowns """
+    fileName = str(data['id']) +'.md'
+    published = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(data['datePublished']))
+    mf = MdUtils(file_name=fileName,title=data['title'])
+    txt = data['title'] + ' - ' + data['enclosureType']
+    mf.new_line(mf.new_inline_link(link=data['enclosureUrl'],text=txt))
+    mf.new_line(mf.new_inline_link(link=data['link'],text='Show Notes Link'))
+    mf.new_line(f'Published: {published}')
+    if 'image' in data:
+        mf.new_paragraph(Html.image(path=data['image']))
+        print(data['image'])
+    elif 'feedImage':
+        mf.new_paragraph(Html.image(path=data['feedImage']))
+    mf.new_paragraph(data['description'])
+    mf.create_md_file()
+    return mf, fileName
+
+
+
 if __name__ == "__main__":
+    
+    episodes = getEpisodes('http://feed.nashownotes.com/rss.xml',1).json()
+    print(json.dumps(episodes,indent=2))
+    
+    if episodes['status']:
+        for epi in episodes['items']:
+            episodeToMarkdown(epi)
     pass

@@ -4,13 +4,16 @@
 
 from beem import Hive
 from beem.account import Account
+from beem.utils import construct_authorperm, sanitize_permlink
 
 import json
 import requests
 import zlib
 import base64
+import datetime
 
 import podcastindex as pind
+from mdutils import MdUtils
 
 txRecord = 'txRecord.json'
 
@@ -123,14 +126,44 @@ def getNodeSpeedTest(auth):
         # print(f'Node: {node} - Time: {elapse}')
     return speed
 
+
+def postLatestEpisode(auth, url):
+    """ Post an episode to the blochain """
+    episodes = pind.getEpisodes(url,1).json()
+    # print(json.dumps(episodes,indent=2))
+    
+    if episodes['status']:
+        for epi in episodes['items']:
+            mf, fileName = pind.episodeToMarkdown(epi)
+            
+    cBody = mf
+    cTitle = epi['title']
+    pLink = epi['title'] + ' - ' + str(epi['id'])
+    pLink = sanitize_permlink(pLink)
+    tx = h.post(title = cTitle, 
+                body = cBody.file_data_text, 
+                author=auth,
+                tags=['test','podcast'],
+                permlink=pLink) 
+    saveTXRecord(tx)
+    return tx
+            
+    pass
+
+    
+
 if __name__ == "__main__":
     feedURLs = ['https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
                 'http://feed.nashownotes.com/rss.xml',
                 'https://feeds.simplecast.com/gRpOClFR']
-    feedURL = feedURLs[0]
+    feedURL = feedURLs[1]
+
+
 
     auth = 'learn-to-code'
     # auth = 'brianoflondon'
+
+    postLatestEpisode(auth,feedURL)
 
     # speeds = getNodeSpeedTest(auth)
     # for speed in speeds: 
@@ -141,18 +174,25 @@ if __name__ == "__main__":
     
     mData,hasData = getRSSFromHive(auth)
     
+    mDataUpdate = False
     if hasData['pod-rss-text']:
         if mData['pod-rss-text'] == rss:
             # print(rssBack)
             print('podcast rss feed unchanged - We did it! The Same.')
+        else:
+            print('Feed needs to be updated')
+            mDataUpdate = True
     
     if hasData['podcastindex']:
         if mData['podcastindex'] == piInfo['podcastindex']:
             print('We did it! The Same.')
+        else:
+            print('Updating podcastindex data too')
     
-    mDataUpdate = False
     if mDataUpdate:
         tx = writePostingJsonMeta(piInfo,auth)
+        
+
 
 
         
@@ -174,10 +214,3 @@ if __name__ == "__main__":
     
     print('done')
 
-
-
-hivenodes = ['https://api.deathwing.me', 
-             'https://hived.emre.sh', 
-             'https://hive.roelandp.nl', 
-             'https://rpc.ausbit.dev', 
-             'https://api.hive.blog', 'https://rpc.ecency.com', 'https://api.pharesim.me', 'https://api.openhive.network', 'https://hived.privex.io', 'https://hive-api.arcange.eu', 'https://api.c0ff33a.uk', 'https://api.hivekings.com', 'https://fin.hive.3speak.co', 'https://anyx.io', ...]
