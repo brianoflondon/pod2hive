@@ -70,9 +70,12 @@ def doRecent(max = 40, since = '', lang = '', cat = '', nocat = ''):
     return doCall('recentfeeds',query)
 
 
-def getEpisodes(feedURL, max):
+def getEpisodes(feedURL, maX=None):
     """ Get max episodes from a feed """
-    query = f'{feedURL}&max={max}'
+    if maX is not None: 
+        query = f'{feedURL}&max={maX}'
+    else:
+        query = f'{feedURL}'
     return doCall('epbyfeedurl', query)
 
 def getEpisode(id):
@@ -84,6 +87,7 @@ def getEpisode(id):
 
 def episodeToMarkdown(data, auth):
     """ Take in a podcast episode data from PodcastIndex and return Markdowns """
+    print(f'Working on {txt}')
     fileName = str(data['id']) +'.md'
     published = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(data['datePublished']))
     mf = MdUtils(file_name=fileName,title=data['title'])
@@ -93,24 +97,24 @@ def episodeToMarkdown(data, auth):
     mf.new_line(f'Published: {published}')
     if 'image' in data:
         mf.new_paragraph(Html.image(path=data['image']))
-        print(data['image'])
     elif 'feedImage':
         mf.new_paragraph(Html.image(path=data['feedImage']))
     mf.new_paragraph(data['description'])
     mf.read_md_file('postfooter.md')
     mf.file_data_text = mf.file_data_text.replace('somethingtoreplacehere777',auth)
-    
+    print(f'Working on {txt}')
     return mf, fileName
 
 
 
 if __name__ == "__main__":
     
-    episodes = getEpisodes('http://feed.nashownotes.com/rss.xml',1).json()
+    episodes = getEpisodes('http://feed.nashownotes.com/rss.xml').json()
     print(json.dumps(episodes,indent=5))
-    auth = 'learn-to-code'
+    auth = 'no-agenda'
     if episodes['status']:
         for epi in episodes['items']:
-            mf,_ =episodeToMarkdown(epi, auth)
-            print(mf.file_data_text)
+            print(epi['title'])
+            # mf,_ =episodeToMarkdown(epi, auth)
+            # print(mf.file_data_text)
     pass

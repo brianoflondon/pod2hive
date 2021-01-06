@@ -167,11 +167,30 @@ def postEpisode(auth, url, id=None):
     tx = h.post(title = cTitle, 
                 body = cBody.file_data_text, 
                 author=auth,
-                tags=['test','podcast'],
-                permlink=pLink) 
+                tags=['podcast'],
+                permlink=pLink,
+                community='hive-136933') 
     saveTXRecord(tx)
     return tx, newContent
 
+
+def postBackEpisodes(auth, feedURL, maX = None):
+    epList = []
+    if maX is not None:
+        episodes = pind.getEpisodes(feedURL,maX).json()
+    else:
+        episodes = pind.getEpisodes(feedURL).json()
+    if episodes['status']:
+        for epi in episodes['items']:
+            epList.append(epi['id'])
+    epList.sort(reverse=False)
+    print(epList)
+    for epId in epList:
+        tx, newContent = postEpisode(auth,feedURL,epId)
+        if newContent:
+            time.sleep(60*60*5) # Wait 5 hours
+        else:
+            time.sleep(6)
     
 
 if __name__ == "__main__":
@@ -182,22 +201,11 @@ if __name__ == "__main__":
 
 
 
-    auth = 'learn-to-code'
-    # auth = 'brianoflondon'
+    # auth = 'learn-to-code'
+    auth = 'no-agenda'
 
-    epList = []
-    episodes = pind.getEpisodes(feedURL,7).json()
-    if episodes['status']:
-        for epi in episodes['items']:
-            epList.append(epi['id'])
-    epList.sort(reverse=False)
-    print(epList)
-    for epId in epList:
-        tx, newContent = postEpisode(auth,feedURL,epId)
-        if newContent:
-            time.sleep(66*5) # Wait 5 mins
-        else:
-            time.sleep(6)
+    postBackEpisodes(auth,feedURL)
+
     
     # revep = sorted(episodes['items'],reverse=True)
     # print(json.dumps(episodes['items'], indent=2))
@@ -219,6 +227,9 @@ if __name__ == "__main__":
         else:
             print('Feed needs to be updated')
             mDataUpdate = True
+    else:
+        print('Feed needs to be updated')
+        mDataUpdate = True
     
     if hasData['podcastindex']:
         if mData['podcastindex'] == piInfo['podcastindex']:
@@ -226,9 +237,10 @@ if __name__ == "__main__":
         else:
             print('Updating podcastindex data too')
     
+    
     if mDataUpdate:
         tx = writePostingJsonMeta(piInfo,auth)
-        
+     
 
 
         
