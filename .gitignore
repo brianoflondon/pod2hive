@@ -135,4 +135,5 @@ dmypy.json
 .pyre/
 
 .vscode/launch.json
+.DS_Store
 
