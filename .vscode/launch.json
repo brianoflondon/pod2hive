@@ -10,7 +10,8 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "env": {"UNLOCK":"yUor@7ZVMy!vjncLfZ@JzcLMbezmX.e.g.4"}
         },
         {
             "name":"Python: search Brian of London",
@@ -18,7 +19,8 @@
             "request":"launch",
             "program":"${file}",
             "console": "integratedTerminal",
-            "args": ["Brian London Experimental"]
+            "args": ["Brian London Experimental"],
+            "env": {"UNLOCK":"yUor@7ZVMy!vjncLfZ@JzcLMbezmX.e.g.4"}
         }
     ]
 }

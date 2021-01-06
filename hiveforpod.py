@@ -15,6 +15,7 @@ import base64
 import datetime
 import time
 
+
 import podcastindex as pind
 from mdutils import MdUtils
 
@@ -131,16 +132,17 @@ def getNodeSpeedTest(auth):
 
 def checkExists(auth, pLink):
     """ Test if a pLink value has been posted by this author before 
-        Returns True False """
+        Returns True False.
+        if True also returns the content body """
     authPLink = construct_authorperm(auth, pLink)
     try:
-        Comment(authorperm=authPLink)
+        c = Comment(authorperm=authPLink)
     except ContentDoesNotExistsException:
-        return False
-    return True
+        return False, ''
+    return True , c.body
 
 
-def postEpisode(auth, url, id=None):
+def postEpisode(auth, url, id=None, postNew = True):
     """ Post an episode to the blochain if no id get latest """
     
     if id is None:
@@ -163,18 +165,20 @@ def postEpisode(auth, url, id=None):
     pLink = epi['title'] + ' - ' + str(epi['id'])
     pLink = sanitize_permlink(pLink)
     
-    newContent = not checkExists(auth,pLink)
-    tx = h.post(title = cTitle, 
-                body = cBody.file_data_text, 
-                author=auth,
-                tags=['podcast'],
-                permlink=pLink,
-                community='hive-136933') 
-    saveTXRecord(tx)
-    return tx, newContent
+    # Only post if this is new content AND the body has changed.
+    oldContent, bodyTxt = checkExists(auth,pLink)
+    if postNew and (bodyTxt != cBody.file_data_text):
+        tx = h.post(title = cTitle, 
+                    body = cBody.file_data_text, 
+                    author=auth,
+                    tags=['podcast'],
+                    permlink=pLink,
+                    community='hive-136933') 
+        saveTXRecord(tx)
+    return oldContent
 
 
-def postBackEpisodes(auth, feedURL, maX = None):
+def postBackEpisodes(auth, feedURL, maX = None, postNew=True):
     epList = []
     if maX is not None:
         episodes = pind.getEpisodes(feedURL,maX).json()
@@ -182,15 +186,17 @@ def postBackEpisodes(auth, feedURL, maX = None):
         episodes = pind.getEpisodes(feedURL).json()
     if episodes['status']:
         for epi in episodes['items']:
-            epList.append(epi['id'])
-    epList.sort(reverse=False)
+            epList.append((epi['datePublished'],epi['id']))
+    epList.sort(key = lambda x: x[0]) 
     print(epList)
     for epId in epList:
-        tx, newContent = postEpisode(auth,feedURL,epId)
-        if newContent:
-            time.sleep(60*60*5) # Wait 5 hours
-        else:
-            time.sleep(6)
+        print(pind.getEpisode(epId[1]).json()['episode']['title'])
+        oldContent = postEpisode(auth,feedURL,epId[1],postNew)
+        if postNew:
+            if not oldContent:
+                time.sleep(60*6) # Wait 6 mins
+            else:
+                time.sleep(6)
     
 
 if __name__ == "__main__":
@@ -204,7 +210,7 @@ if __name__ == "__main__":
     # auth = 'learn-to-code'
     auth = 'no-agenda'
 
-    postBackEpisodes(auth,feedURL)
+    postBackEpisodes(auth,feedURL,maX=10, postNew=True)
 
     
     # revep = sorted(episodes['items'],reverse=True)

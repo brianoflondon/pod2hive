@@ -4,7 +4,7 @@
 
 # Pod2Hive - Podcast Censorship Protection 
 
-This Podcast is being automatically backed up to the Hive Blockchain. [You can find more information about this project here.](pod2hive)
+This Podcast is being automatically backed up to the Hive Blockchain. [You can find more information about this project here.](https://github.com/brianoflondon/pod2hive)
 
 To Decode the RSS feed stored alongside this data, use the [rssfromhive.py](https://github.com/brianoflondon/pod2hive/blob/main/rssfromhive.py) script.
 

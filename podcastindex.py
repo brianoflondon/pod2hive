@@ -87,7 +87,6 @@ def getEpisode(id):
 
 def episodeToMarkdown(data, auth):
     """ Take in a podcast episode data from PodcastIndex and return Markdowns """
-    print(f'Working on {txt}')
     fileName = str(data['id']) +'.md'
     published = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(data['datePublished']))
     mf = MdUtils(file_name=fileName,title=data['title'])

@@ -42,4 +42,10 @@ This code relys on me having entered private posting keys for the "learn-to-code
 
 You don't need keys or an account to read public data from the chain. I belive there is a simple curl way of accessing this data but I need to do some work on that becuase of the encoding.
 
+This will extract the RSS data from the Chain as well as PodcastIndex's data about the podcast.
+
+```curl -s --data '{"jsonrpc":"2.0", "method":"database_api.find_accounts", "params": {"accounts":["no-agenda"]}, "id":1}' https://api.hive.blog```
+
+The RSS feed is encoded with base64 and zlib compression.
+
 Loads of work needed but I'm on my way.
