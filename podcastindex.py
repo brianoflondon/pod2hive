@@ -78,42 +78,56 @@ def getEpisodes(feedURL, maX=None):
         query = f'{feedURL}'
     return doCall('epbyfeedurl', query)
 
-def getEpisode(id):
+def getEpisode(idd):
     """ Get specific episode by episode id """
-    query = f'{id}'
+    query = f'{idd}'
     return doCall('epbyid',query)
 
+def getPodInfoId(idd):
+    """ Gets info about the specific podcast by ID """
+    query = f'{idd}'
+    return doCall('byfeedid',query)
 
+def getPodInfoUrl(url):
+    """ Gets podcast info by URL """
+    return doCall('byfeed',url)
 
-def episodeToMarkdown(data, auth):
+def episodeToMarkdown(data, podInfo, auth):
     """ Take in a podcast episode data from PodcastIndex and return Markdowns """
     fileName = str(data['id']) +'.md'
     published = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(data['datePublished']))
     mf = MdUtils(file_name=fileName,title=data['title'])
-    txt = data['title'] + ' - ' + data['enclosureType']
-    mf.new_line(mf.new_inline_link(link=data['enclosureUrl'],text=txt))
+    showTxt = data['title'] + ' - ' + data['enclosureType']
+    mf.new_line(mf.new_inline_link(link=data['enclosureUrl'],text=showTxt))
     mf.new_line(mf.new_inline_link(link=data['link'],text='Show Notes Link'))
     mf.new_line(f'Published: {published}')
     if 'image' in data:
         mf.new_paragraph(Html.image(path=data['image']))
     elif 'feedImage':
         mf.new_paragraph(Html.image(path=data['feedImage']))
+    showTitle = "Podcast: " + podInfo['feed']['title']
+    mf.new_header(1, showTitle)
+    feedUrl = podInfo['feed']['url']
+    podLink = f'[Original RSS Feed]({feedUrl})'
+    mf.new_paragraph(podLink)
     mf.new_paragraph(data['description'])
+    mf.new_paragraph('PodcastIndex.org ID: ' + str(data['id']))
     mf.read_md_file('postfooter.md')
     mf.file_data_text = mf.file_data_text.replace('somethingtoreplacehere777',auth)
-    print(f'Working on {txt}')
+    print(f'Working on {showTxt}')
     return mf, fileName
 
 
 
 if __name__ == "__main__":
-    
-    episodes = getEpisodes('http://feed.nashownotes.com/rss.xml').json()
+    url = 'http://feed.nashownotes.com/rss.xml'
+    episodes = getEpisodes(url).json()
+    podInfo = getPodInfoUrl(url).json()
     print(json.dumps(episodes,indent=5))
     auth = 'no-agenda'
     if episodes['status']:
         for epi in episodes['items']:
             print(epi['title'])
-            # mf,_ =episodeToMarkdown(epi, auth)
-            # print(mf.file_data_text)
+            mf,_ =episodeToMarkdown(epi, podInfo, auth)
+            print(mf.file_data_text)
     pass
