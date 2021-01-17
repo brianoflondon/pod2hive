@@ -102,6 +102,7 @@ def getPIinfoAndRss(url):
     piInfo = {}
     piInfo['podcastindex'] = r.json()
     piInfo['pod-rss'] = rssComp
+    piInfo['pod-url'] = url
     return piInfo, rss
 
 
@@ -145,6 +146,8 @@ def checkExists(auth, pLink):
 def postEpisode(auth, url, id=None, postNew = True):
     """ Post an episode to the blochain if no id get latest """
     
+    podInfo = pind.getPodInfoUrl(url).json()
+    
     if id is None:
         episodes = pind.getEpisodes(url,1).json()
         # print(json.dumps(episodes,indent=2))
@@ -158,7 +161,7 @@ def postEpisode(auth, url, id=None, postNew = True):
             epi = episodes['episode']
         
             
-    mf, _ = pind.episodeToMarkdown(epi, auth)
+    mf, _ = pind.episodeToMarkdown(epi, podInfo, auth)
             
     cBody = mf
     cTitle = epi['title']
@@ -171,7 +174,7 @@ def postEpisode(auth, url, id=None, postNew = True):
         tx = h.post(title = cTitle, 
                     body = cBody.file_data_text, 
                     author=auth,
-                    tags=['podcast'],
+                    tags=['podcast','pod2hive'],
                     permlink=pLink,
                     community='hive-136933') 
         saveTXRecord(tx)
@@ -194,77 +197,57 @@ def postBackEpisodes(auth, feedURL, maX = None, postNew=True):
         oldContent = postEpisode(auth,feedURL,epId[1],postNew)
         if postNew:
             if not oldContent:
-                time.sleep(60*6) # Wait 6 mins
+                for n in range(5):
+                    print(n)
+                    time.sleep(60)
             else:
                 time.sleep(6)
     
 
 if __name__ == "__main__":
-    feedURLs = ['https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
-                'http://feed.nashownotes.com/rss.xml',
-                'https://feeds.simplecast.com/gRpOClFR']
-    feedURL = feedURLs[1]
-
-
-
-    # auth = 'learn-to-code'
-    auth = 'no-agenda'
-
-    postBackEpisodes(auth,feedURL,maX=10, postNew=True)
+    feedURLs = {
+        'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
+        'no-agenda' : 'http://feed.nashownotes.com/rss.xml',
+        'podcastindex' : 'https://mp3s.nashownotes.com/pc20rss.xml'
+    }
 
     
-    # revep = sorted(episodes['items'],reverse=True)
-    # print(json.dumps(episodes['items'], indent=2))
     
-    # speeds = getNodeSpeedTest(auth)
-    # for speed in speeds: 
-    #     print(f'{speed} - {speeds[speed]}')
     
+    new_episode = False
+    while not new_episode:
+        for auth in feedURLs:
+            feedURL = feedURLs[auth]
 
-    piInfo, rss = getPIinfoAndRss(feedURL)
-    
-    mData,hasData = getRSSFromHive(auth)
-    
-    mDataUpdate = False
-    if hasData['pod-rss-text']:
-        if mData['pod-rss-text'] == rss:
-            # print(rssBack)
-            print('podcast rss feed unchanged - We did it! The Same.')
-        else:
-            print('Feed needs to be updated')
-            mDataUpdate = True
-    else:
-        print('Feed needs to be updated')
-        mDataUpdate = True
-    
-    if hasData['podcastindex']:
-        if mData['podcastindex'] == piInfo['podcastindex']:
-            print('We did it! The Same.')
-        else:
-            print('Updating podcastindex data too')
-    
-    
-    if mDataUpdate:
-        tx = writePostingJsonMeta(piInfo,auth)
-     
+            piInfo, rss = getPIinfoAndRss(feedURL)        
+            mData,hasData = getRSSFromHive(auth)
+            
+            mDataUpdate = False
+            if hasData['pod-rss-text']:
+                if mData['pod-rss-text'] == rss:
+                    # print(rssBack)
+                    print(f'Feed unchanged: {auth} - {feedURL}')
+                else:
+                    print(f'Update needed:  {auth} - {feedURL}')
+                    mDataUpdate = True
+            else:
+                print(f'Feed needs to be created: {auth} - {feedURL}')
+                mDataUpdate = True
+            
+            # Podcastindex data will always changed because of access time
+            # if hasData['podcastindex']:
+            #     if mData['podcastindex'] == piInfo['podcastindex']:
+            #         print('We did it! The Same.')
+            #     else:
+            #         print('Updating podcastindex data too')
+            mDataUpdate=False
+            if mDataUpdate:
+                tx = writePostingJsonMeta(piInfo,auth)
+                postBackEpisodes(auth,feedURL,1,True)
+                print(f'New episode')
+                new_episode = True
+        
+        print('done')
 
 
         
-    
-    # curl -s --data '{"jsonrpc":"2.0", "method":"database_api.find_accounts", "params": {"accounts":["learn-to-code"]}, "id":1}' https://api.hive.blog
-    
-    
-    # with open('ltc-profile.json', 'r') as f:
-    #     profiled = json.load(f)
-
-    # writePostingJsonMeta(profiled,auth)
-    
-    # blank = {}
-    # acc = Account(auth,blockchain_instance=h)
-    # tx = acc.update_account_jsonmetadata(blank,account=auth)
-    
-    # tx =acc.update_account_metadata(blank,auth) # Account json metadata needs Active Key
-    
-    
-    print('done')
-
