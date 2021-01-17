@@ -26,6 +26,10 @@ https://hive.blog/@learn-to-code.json
 
 To Decode this to RSS you can use the code here:
 
+This site is a rudimentary API server that pulls out the RSS from any Hive account which has one:
+
+http:/hive.noagendahost.com/hiverss/v1/rss/learn-to-code
+
 https://github.com/brianoflondon/pod2hive/blob/main/rssfromhive.py
 
 If you're eyes are working, you'll find the PodcastIndex data for my podcast is then followed by a compressed and character encoded (but not cryptographically encoded) block of data that is the RSS feed.
@@ -49,3 +53,10 @@ This will extract the RSS data from the Chain as well as PodcastIndex's data abo
 The RSS feed is encoded with base64 and zlib compression.
 
 Loads of work needed but I'm on my way.
+
+
+# Payments to Podcasts
+
+We want to stream small payments to podcast creators and others involved in the value chain of podcasting.
+
+First
