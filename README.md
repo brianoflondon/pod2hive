@@ -28,7 +28,7 @@ To Decode this to RSS you can use the code here:
 
 This site is a rudimentary API server that pulls out the RSS from any Hive account which has one:
 
-http:/hive.noagendahost.com/hiverss/v1/rss/learn-to-code
+http://hive.noagendahost.com/hiverss/v1/rss/learn-to-code
 
 https://github.com/brianoflondon/pod2hive/blob/main/rssfromhive.py
 
