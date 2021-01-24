@@ -7,6 +7,7 @@ from beem.account import Account
 from beem.comment import Comment
 from beem.utils import construct_authorperm, sanitize_permlink
 from beem.exceptions import ContentDoesNotExistsException
+from beemapi.exceptions import UnnecessarySignatureDetected
 
 import json
 import requests
@@ -20,6 +21,7 @@ import podcastindex as pind
 from mdutils import MdUtils
 
 txRecord = 'txRecord.json'
+run_as_acc = 'learn-to-code'
 
 h = Hive()
 
@@ -82,8 +84,13 @@ def writePostingJsonMeta(data, auth, wipe=False):
         repalces all existing data """
     eMeta = getPostingJsonMeta(auth)
     newMeta = {**eMeta, **data}
-    acc = Account(auth,blockchain_instance=h)
-    tx = acc.update_account_jsonmetadata(newMeta, account=auth)
+    acc = Account(run_as_acc,blockchain_instance=h)  
+    try:
+        tx = acc.update_account_jsonmetadata(newMeta, account=auth)
+    except UnnecessarySignatureDetected:
+        print('UnnecessarySignatureDetected')
+        print('Something went wrong')
+        tx = {}
     saveTXRecord(tx)
     return tx
     
@@ -240,14 +247,16 @@ if __name__ == "__main__":
             #         print('We did it! The Same.')
             #     else:
             #         print('Updating podcastindex data too')
-            mDataUpdate=False
+
             if mDataUpdate:
                 tx = writePostingJsonMeta(piInfo,auth)
-                postBackEpisodes(auth,feedURL,1,True)
+                postBackEpisodes(auth,feedURL,2,True)
                 print(f'New episode')
                 new_episode = True
+        print('Sleeping ' + datetime.datetime.now().strftime('%c'))
+        time.sleep(60*30)
         
-        print('done')
+    print('done')
 
 
         
