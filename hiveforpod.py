@@ -15,6 +15,7 @@ import zlib
 import base64
 import datetime
 import time
+import os.path
 
 
 import podcastindex as pind
@@ -149,6 +150,27 @@ def checkExists(auth, pLink):
         return False, ''
     return True , c.body
 
+def make_hive_perm_link(epi):
+    """ Takes in a dictionar of episode information and contructs a permalink
+        At first I used epi['id'] but this was unreliable, changed to using a
+        hash of GUID instead 2021-01-24 
+        Returns a string """
+        
+    # First check if this is an old episode we already did with the id.
+    find_this = False
+    if os.path.exists('old_episodes.json'):
+        with open('old_episodes.json','r') as fl:
+            old_episodes = json.load(fl)
+        find_this = (next((item for item in old_episodes if item["title"] == epi['title']), False))
+    # This line from: https://stackoverflow.com/a/31988734/9162717
+    if find_this:
+        p_link = find_this['permlink']
+    else:       # Use the new version of hashing the GUID
+        p_link = epi['title'] + '_' + str(hash(epi['guid']))
+        p_link = sanitize_permlink(p_link)
+    return p_link
+    
+    
 
 def postEpisode(auth, url, id=None, postNew = True):
     """ Post an episode to the blochain if no id get latest """
@@ -158,7 +180,6 @@ def postEpisode(auth, url, id=None, postNew = True):
     if id is None:
         episodes = pind.getEpisodes(url,1).json()
         # print(json.dumps(episodes,indent=2))
-        
         if episodes['status']:
             for epi in episodes['items']:
                 id = epi['id']
@@ -172,8 +193,7 @@ def postEpisode(auth, url, id=None, postNew = True):
             
     cBody = mf
     cTitle = epi['title']
-    pLink = epi['title'] + ' - ' + str(epi['id'])
-    pLink = sanitize_permlink(pLink)
+    pLink = make_hive_perm_link(epi)
     
     # Only post if this is new content AND the body has changed.
     oldContent, bodyTxt = checkExists(auth,pLink)
@@ -210,17 +230,7 @@ def postBackEpisodes(auth, feedURL, maX = None, postNew=True):
             else:
                 time.sleep(6)
     
-
-if __name__ == "__main__":
-    feedURLs = {
-        'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
-        'no-agenda' : 'http://feed.nashownotes.com/rss.xml',
-        'podcastindex' : 'https://mp3s.nashownotes.com/pc20rss.xml'
-    }
-
-    
-    
-    
+def scan_feeds_and_publish_once(feedURLs):
     new_episode = False
     while not new_episode:
         for auth in feedURLs:
@@ -259,4 +269,25 @@ if __name__ == "__main__":
     print('done')
 
 
-        
+def update_old_episodes(numBack, feedURLs):            
+    # Update old episodes going back numbBack in a feed
+    for auth in feedURLs:
+        feedURL = feedURLs[auth]
+        postBackEpisodes(auth,feedURL,numBack,False)
+    
+
+if __name__ == "__main__":
+    feedURLs = {
+        # 'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
+        'no-agenda' : 'http://feed.nashownotes.com/rss.xml',
+        'podcastindex' : 'https://mp3s.nashownotes.com/pc20rss.xml'
+    }
+    
+    feed_community = {
+        'no-agenda' : 'hive-136933',
+        'podcastindext' : 'hive-136933'
+    }
+    scan_feeds_and_publish_once(feedURLs)
+    # update_old_episodes(1,feedURLs)
+    
+   
