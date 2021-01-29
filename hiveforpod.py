@@ -16,7 +16,9 @@ import base64
 import datetime
 import time
 import os.path
+import hashlib
 
+NOBROADCAST_TX = True
 
 import podcastindex as pind
 from mdutils import MdUtils
@@ -24,7 +26,7 @@ from mdutils import MdUtils
 txRecord = 'txRecord.json'
 run_as_acc = 'learn-to-code'
 
-h = Hive()
+h = Hive(nobroadcast=NOBROADCAST_TX)
 
 def txtComp(txt):
     """ Take in text, compress it and output base64 encoded string
@@ -166,8 +168,15 @@ def make_hive_perm_link(epi):
     if find_this:
         p_link = find_this['permlink']
     else:       # Use the new version of hashing the GUID
-        p_link = epi['title'] + '_' + str(hash(epi['guid']))
+        guid = epi.get('guid')
+        if guid == '':
+            guid ='in the morning'
+        m = hashlib.md5()
+        m.update(guid.encode())
+        hashstr = m.hexdigest()[:8]
+        p_link = epi['title'] + '_' + hashstr
         p_link = sanitize_permlink(p_link)
+    print(p_link)
     return p_link
     
     
@@ -260,7 +269,7 @@ def scan_feeds_and_publish_once(feedURLs):
 
             if mDataUpdate:
                 tx = writePostingJsonMeta(piInfo,auth)
-                postBackEpisodes(auth,feedURL,2,True)
+                postBackEpisodes(auth,feedURL,20,True)
                 print(f'New episode')
                 new_episode = True
         print('Sleeping ' + datetime.datetime.now().strftime('%c'))
@@ -287,7 +296,7 @@ if __name__ == "__main__":
         'no-agenda' : 'hive-136933',
         'podcastindext' : 'hive-136933'
     }
-    scan_feeds_and_publish_once(feedURLs)
-    # update_old_episodes(1,feedURLs)
+    # scan_feeds_and_publish_once(feedURLs)
+    update_old_episodes(20,feedURLs)
     
    
