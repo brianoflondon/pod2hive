@@ -18,7 +18,7 @@ import time
 import os.path
 import hashlib
 
-NOBROADCAST_TX = True
+NOBROADCAST_TX = False
 
 import podcastindex as pind
 from mdutils import MdUtils
@@ -269,7 +269,7 @@ def scan_feeds_and_publish_once(feedURLs):
 
             if mDataUpdate:
                 tx = writePostingJsonMeta(piInfo,auth)
-                postBackEpisodes(auth,feedURL,20,True)
+                postBackEpisodes(auth,feedURL,1,True)
                 print(f'New episode')
                 new_episode = True
         print('Sleeping ' + datetime.datetime.now().strftime('%c'))
@@ -287,7 +287,7 @@ def update_old_episodes(numBack, feedURLs):
 
 if __name__ == "__main__":
     feedURLs = {
-        # 'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
+        'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
         'no-agenda' : 'http://feed.nashownotes.com/rss.xml',
         'podcastindex' : 'https://mp3s.nashownotes.com/pc20rss.xml'
     }
@@ -296,7 +296,7 @@ if __name__ == "__main__":
         'no-agenda' : 'hive-136933',
         'podcastindext' : 'hive-136933'
     }
-    # scan_feeds_and_publish_once(feedURLs)
-    update_old_episodes(20,feedURLs)
+    scan_feeds_and_publish_once(feedURLs)
+    # update_old_episodes(20,feedURLs)
     
    

@@ -11,8 +11,9 @@ accs = {'podcastindex',
         'no-agenda',
         'brianoflondon'}
 
+force_reload = True
 
-if os.path.exists('old_episodes.json'):
+if not force_reload and os.path.exists('old_episodes.json'):
     with open('old_episodes.json','r') as fl:
         old_episodes = json.load(fl)
 else:
