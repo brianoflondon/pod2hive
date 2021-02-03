@@ -6,7 +6,7 @@ from beem import Hive
 from beem.account import Account
 from beem.comment import Comment
 from beem.utils import construct_authorperm, sanitize_permlink
-from beem.exceptions import ContentDoesNotExistsException
+from beem.exceptions import ContentDoesNotExistsException, WrongMasterPasswordException
 from beemapi.exceptions import UnnecessarySignatureDetected
 
 import json
@@ -16,9 +16,10 @@ import base64
 import datetime
 import time
 import os.path
+import os
 import hashlib
 
-NOBROADCAST_TX = False
+NOBROADCAST_TX = True
 
 import podcastindex as pind
 from mdutils import MdUtils
@@ -26,7 +27,9 @@ from mdutils import MdUtils
 txRecord = 'txRecord.json'
 run_as_acc = 'learn-to-code'
 
-h = Hive(nobroadcast=NOBROADCAST_TX)
+wif = os.environ('WIF_POSTING')
+h = Hive(nobroadcast=NOBROADCAST_TX, 
+         keys=[wif])
 
 def txtComp(txt):
     """ Take in text, compress it and output base64 encoded string
@@ -87,6 +90,7 @@ def writePostingJsonMeta(data, auth, wipe=False):
         repalces all existing data """
     eMeta = getPostingJsonMeta(auth)
     newMeta = {**eMeta, **data}
+    # h.wallet.unlock(os.environ.get('UNLOCK'))
     acc = Account(run_as_acc,blockchain_instance=h)  
     try:
         tx = acc.update_account_jsonmetadata(newMeta, account=auth)
@@ -296,7 +300,7 @@ if __name__ == "__main__":
         'no-agenda' : 'hive-136933',
         'podcastindext' : 'hive-136933'
     }
-    scan_feeds_and_publish_once(feedURLs)
-    # update_old_episodes(20,feedURLs)
+    # scan_feeds_and_publish_once(feedURLs)
+    update_old_episodes(20,feedURLs)
     
    
