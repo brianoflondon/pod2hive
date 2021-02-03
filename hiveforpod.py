@@ -19,15 +19,15 @@ import os.path
 import os
 import hashlib
 
-NOBROADCAST_TX = True
+NOBROADCAST_TX = False
 
 import podcastindex as pind
 from mdutils import MdUtils
 
 txRecord = 'txRecord.json'
 run_as_acc = 'learn-to-code'
-
-wif = os.environ('WIF_POSTING')
+os.environ
+wif = os.environ['WIF_POSTING']
 h = Hive(nobroadcast=NOBROADCAST_TX, 
          keys=[wif])
 
@@ -240,6 +240,7 @@ def postBackEpisodes(auth, feedURL, maX = None, postNew=True):
                 for n in range(5):
                     print(n)
                     time.sleep(60)
+                    time.sleep(6)
             else:
                 time.sleep(6)
     
@@ -300,7 +301,7 @@ if __name__ == "__main__":
         'no-agenda' : 'hive-136933',
         'podcastindext' : 'hive-136933'
     }
-    # scan_feeds_and_publish_once(feedURLs)
-    update_old_episodes(20,feedURLs)
+    scan_feeds_and_publish_once(feedURLs)
+    # update_old_episodes(20,feedURLs)
     
    
