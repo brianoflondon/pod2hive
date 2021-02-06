@@ -156,8 +156,8 @@ def checkExists(auth, pLink):
         return False, ''
     return True , c.body
 
-def make_hive_perm_link(epi):
-    """ Takes in a dictionar of episode information and contructs a permalink
+def make_hive_perm_link(epi, podInfo):
+    """ Takes in a dictionary of episode information and contructs a permalink
         At first I used epi['id'] but this was unreliable, changed to using a
         hash of GUID instead 2021-01-24 
         Returns a string """
@@ -172,12 +172,14 @@ def make_hive_perm_link(epi):
     if find_this:
         p_link = find_this['permlink']
     else:       # Use the new version of hashing the GUID
+        pod_info_id = podInfo.get('feed').get('id') 
         guid = epi.get('guid')
         if guid == '':
             guid ='in the morning'
+        id_and_guid = f'{pod_info_id}_{guid}'
         m = hashlib.md5()
-        m.update(guid.encode())
-        hashstr = m.hexdigest()[:8]
+        m.update(id_and_guid.encode())
+        hashstr = m.hexdigest()[:10]
         p_link = epi['title'] + '_' + hashstr
         p_link = sanitize_permlink(p_link)
     print(p_link)
@@ -189,7 +191,7 @@ def postEpisode(auth, url, id=None, postNew = True):
     """ Post an episode to the blochain if no id get latest """
     
     podInfo = pind.getPodInfoUrl(url).json()
-    
+    # podInfoID = podInfo['feed']['id']
     if id is None:
         episodes = pind.getEpisodes(url,1).json()
         # print(json.dumps(episodes,indent=2))
@@ -206,7 +208,7 @@ def postEpisode(auth, url, id=None, postNew = True):
             
     cBody = mf
     cTitle = epi['title']
-    pLink = make_hive_perm_link(epi)
+    pLink = make_hive_perm_link(epi,podInfo)
     
     # Only post if this is new content AND the body has changed.
     oldContent, bodyTxt = checkExists(auth,pLink)
@@ -292,7 +294,7 @@ def update_old_episodes(numBack, feedURLs):
 
 if __name__ == "__main__":
     feedURLs = {
-        'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
+        # 'brianoflondon' : 'https://www.brianoflondon.me/podcast2/brians-forest-talks-exp.xml',
         'no-agenda' : 'http://feed.nashownotes.com/rss.xml',
         'podcastindex' : 'https://mp3s.nashownotes.com/pc20rss.xml'
     }
